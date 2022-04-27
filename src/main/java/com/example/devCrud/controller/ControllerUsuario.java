@@ -4,6 +4,7 @@ package com.example.devCrud.controller;
 import com.example.devCrud.entity.Usuario;
 import com.example.devCrud.repository.RepositoryUsuario;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -41,10 +42,22 @@ public class ControllerUsuario {
         }
     }
 
-    @PutMapping("/usuarios")
-    public ResponseEntity<Usuario> actualizarUsuario(@RequestBody Usuario usuario) {
+    @PutMapping("/usuarios/{id}")
+    public ResponseEntity<Usuario> actualizarUsuario( @PathVariable Long id, @RequestBody Usuario usuario) throws ResourceNotFoundException {
         try {
-            return new ResponseEntity<>(repositoryUsuario.save(usuario), HttpStatus.OK);
+            Usuario user = repositoryUsuario.findById(id).orElseThrow(
+                    ()-> new ResourceNotFoundException("Usuario con el soguiente id no fue encontrado ::"
+                            + id) );
+
+            user.setNombre(usuario.getNombre());
+            user.setFechaNacimiento(usuario.getFechaNacimiento());
+            user.setCorreo(usuario.getCorreo());
+            user.setGenero(usuario.getGenero());
+            user.setHobbies(usuario.getHobbies());
+
+            final Usuario usuarioUpdate = repositoryUsuario.save(user);
+            return ResponseEntity.ok(usuarioUpdate);
+
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
